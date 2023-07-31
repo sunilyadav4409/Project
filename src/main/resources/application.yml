@@ -1,0 +1,142 @@
+spring:
+  application:
+    name: "ws_finance_carrierpayment_autopay"
+  cloud:
+    config:
+      enabled: false
+  jmx:
+    enabled: false
+  main:
+    allow-bean-definition-overriding: true
+    allow-circular-references: true
+  jpa:
+    show-sql: true
+    database: "SQL_SERVER"
+    hibernate:
+      ddl-auto: "none"
+      naming:
+        physical-strategy: "org.hibernate.boot.model.naming.PhysicalNamingStrategyStandardImpl"
+    properties:
+      hibernate:
+        dialect: "org.hibernate.dialect.SQLServer2012Dialect"
+        id:
+          new_generator_mappings: false
+  activemq:
+    user: "${DOMAIN_PID}"
+    password: "${DOMAIN_PASSWORD}"
+    broker-url: "failover:(nio://amq-finance${environment.amqService}1${domain}:61617,nio://amq-finance${environment.amqService}2${domain}:61617)?randomize=false&startupMaxReconnectAttempts=1&jms.watchTopicAdvisories=false&jms.useAsyncSend=true&jms.prefetchPolicy.all=1"
+    pool:
+      enabled: true
+  datasource:
+    url: "jdbc:db2://${environment.uppercase}PJES2.jbhunt.com:5031/JBHDB2T"
+    max-active: 20
+    driver-class-name: "com.ibm.db2.jcc.DB2Driver"
+    default-auto-commit: false
+  datasource1:
+    jdbc-url: "jdbc:sqlserver://Payment_${environment.uppercase}${domain}:1433;DatabaseName=Payment_${environment.uppercase};sendStringParametersAsUnicode=true;integratedSecurity=true;authenticationScheme=JavaKerberos;integratedAuth=true;encrypt=true;trustServerCertificate=true;applicationName=ws_finance_carrierpayment_autopay"
+    max-active: 20
+    driver-class-name: "com.microsoft.sqlserver.jdbc.SQLServerDriver"
+  redis:
+    host: redis-cache-master.cache.svc.cluster.local
+    port: 6379
+    password: ${REDIS_KEY}
+  cache:
+    type: redis
+  security:
+    oauth2:
+      client:
+        provider:
+          serviceAccount:
+            token-uri: https://sso${environment.service}${domain}/auth/realms/security360/protocol/openid-connect/token
+        registration:
+          serviceAccount:
+            client-id: ${CARRIERPAYMENT_CLIENTID}
+            client-secret: ${CARRIERPAYMENT_CLIENTSECRET}
+            authorization-grant-type: client_credentials
+      resourceserver:
+        jwt:
+          issuer-uri: "https://sso${environment.service}${domain}/auth/realms/security360"
+          jwk-set-uri: "https://sso${environment.service}${domain}/auth/realms/security360/protocol/openid-connect/certs"
+
+amqElasticTopicName: "FINANCE.T.CARRIERPAYMENT.ELASTICUPDATE"
+paymentsTopicName: "FINANCE.T.CARRIERPAYMENTBRIDGE.INBOUND.MESSAGE.EVENTS"
+chargesDecisionStatusTopicName: "FINANCE.T.CARRIERPAYMENT.CHARGES.APPROVAL"
+elasticSearchBaseUrl: "finance-elastic-7${environment.service}${domain}"
+elasticSearchWorkFlowIndex: "finance-payment-carrierpayment-workflow"
+
+elasticDocType: "_doc"
+elasticPort: 9200
+refreshParamElasticUpdate: true
+timeoutParamElasticUpdate: "2m"
+
+supplierServiceBaseUrl: "https://carrierpaymentservices${environment.service}${domain}/carrierpaymentsupplier/"
+
+rollout:
+  enabled: true
+  key: "${payments-rolloutio-key}"
+
+jbhunt:
+  cache:
+    redis:
+      initial-cache-configurations:
+        getParametersForWorkFlowGroup:
+          time-to-live: 86400s
+
+management:
+  health:
+    solr:
+      enabled: false
+    elasticsearch:
+      enabled: false
+    redis:
+      enabled: false
+  endpoints:
+    web:
+      exposure:
+        include: "*"
+server:
+  port: 8080
+  servlet:
+    context-path: "/carrierpaymentautopay"
+
+---
+spring:
+  config:
+    activate:
+      on-profile: "DEV"
+domain: ".nonprod.jbhunt.com"
+environment:
+  full: "dev"
+  service: "-dev"
+  lowercase: "dev"
+  uppercase: "DEV"
+  serviceFull: "-dev"
+  amqService: "-dev"
+
+---
+spring:
+  config:
+    activate:
+      on-profile: "TEST"
+domain: ".nonprod.jbhunt.com"
+environment:
+  full: "test"
+  service: "-tst"
+  lowercase: "tst"
+  uppercase: "TST"
+  serviceFull: "-test"
+  amqService: "-tst"
+
+---
+spring:
+  config:
+    activate:
+      on-profile: "PROD"
+domain: ".jbhunt.com"
+environment:
+  full: "prd"
+  service: ""
+  lowercase: "prd"
+  uppercase: "PRD"
+  serviceFull: ""
+  amqService: "-prd"

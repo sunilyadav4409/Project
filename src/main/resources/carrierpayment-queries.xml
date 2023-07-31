@@ -1,0 +1,154 @@
+<?xml version="1.0" encoding="UTF-8"?>
+
+<properties>
+
+    <entry key="getParametersList">
+        <![CDATA[
+            select ps.ParameterSpecificationTypeCode as parameterSpecificationTypeCode ,
+                   pt.ParameterSpecificationTypeDescription as parameterSpecificationTypeDescription,
+                   pa.CarrierPaymentWorkflowGroupTypeCode as carrierPaymentWorkflowGroupTypeCode,
+                   p.CarrierFreightPaymentParameterID as parameterID,
+                   p.ParameterWorkflowSpecificationAssociationID as workflowSpecificationAssociation,
+                   p.LogicalOperatorCode as operatorCode,
+                   p.ParameterSpecificationSubTypeCode as specificationSub,
+                   p.PrimaryParameterNumberValue as minNumberValue,
+                   p.SecondaryParameterNumberValue as maxNumberValue,
+                   p.EffectiveTimestamp as effectiveDate,
+                   p.ExpirationTimestamp as expirationDate
+            from CFP.CarrierFreightPaymentParameter            p,
+            CFP.ParameterWorkflowSpecificationAssociation      pa,
+            CFP.ParameterSpecification                         ps,
+            CFP.ParameterSpecificationType                     pt
+            where ps.ParameterSpecificationID  = pa.ParameterSpecificationID
+            and pa.ParameterWorkflowSpecificationAssociationID = p.ParameterWorkflowSpecificationAssociationID
+            and ps.ParameterSpecificationTypeCode = pt.ParameterSpecificationTypeCode
+            and ps.ParameterSpecificationTypeCode in ('AutoApprov','AutoAprTol','AutoAprOvr','AAprChgGrp','AAChgTheRq','AAChgThred','ApplyToCus','App2CusChg','AAPRVDELAY')
+            and pa.CarrierPaymentWorkflowGroupTypeCode = :carrierPaymentWorkflowGroupTypeCode
+            and SYSDATETIMEOFFSET() between p.EffectiveTimestamp and p.ExpirationTimestamp
+            order by ps.ParameterSpecificationTypeCode , pa.CarrierPaymentWorkflowGroupTypeCode;
+            ]]>
+    </entry>
+
+    <entry key="getCountFromTOrderByLoadNumber">
+        <![CDATA[
+    SELECT count(*) FROM ALI.TORDER WHERE ORD_NBR_CH = :loadNumber WITH UR;
+    ]]>
+    </entry>
+
+    <entry key="getCountFromTOrderWByLoadNumber">
+        <![CDATA[
+    SELECT count(*) FROM ALI.TORDER_W WHERE ORD_NBR_CH = :loadNumber WITH UR;
+    ]]>
+    </entry>
+
+    <entry key="addChargeKey">
+        <![CDATA[
+	INSERT INTO ALI.TORDER_CHARGE(
+	ORD_I,	RQM_CLS_C,	LN_ITM_SEQ_NBR ,REF_NBR_TYP_C,	REF_NBR,  ORD_STP_SEQ_NBR, CHR_RAT,	CRT_S,	CRT_UID,	CRT_PGM_C,
+	LST_UPD_S,	LST_UPD_UID, LST_UPD_PGM_C,	CHR_SRC_C ,	FCT_TYP_BAS_C , FCT_TYP_BAS_Q, REC_STT_F , REM_TO_CUS_C,	CHR_ETY_C,
+	DSP_SEQ_NBR, CUR_BAS_C, REM_TO_IVC_REF_NBR, IVC_RCV_D, CRR_REQ_PAY_D_PSAP, ATH_BY_UID, ATH_BY_LST_NM, ATH_BY_FRS_NM, BOL_RCV_D,
+	US_CHG_A ,EXP_F,PAY_F)
+
+	VALUES( :orderId ,:chargeCode ,0 ,'CHRG AUTH', :referenceNumber ,:stopNumber ,:chargeAmount ,CURRENT TIMESTAMP ,:userId ,'CFP' ,
+	CURRENT TIMESTAMP ,:userId ,'CFP' ,'MANUAL' ,'FLAT' ,:chargeQuantity,'A' ,'' ,'SHIPMENT' ,
+	0 ,'DOLLARS' ,'' ,null ,null ,:userId, '' ,'' ,null ,
+	:chargeAmount ,'N' ,'N')
+	]]>
+    </entry>
+
+    <entry key="updateCustCharge">
+        <![CDATA[
+	UPDATE ALI.TORDER_CHARGE SET CHR_RAT = :chargeAmount, FCT_TYP_BAS_Q = :chargeQuantity, REF_NBR_TYP_C = :referenceType , REF_NBR = :referenceNumber,
+	LST_UPD_S = CURRENT TIMESTAMP, LST_UPD_UID = :userId, LST_UPD_PGM_C = 'CFP', US_CHG_A = :chargeAmount
+	WHERE ORD_CHR_I in ( :externalChargeID )  and PAY_F = 'N' and REC_STT_F ='A';
+	]]>
+    </entry>
+
+    <entry key="updateCharge">
+        <![CDATA[
+	UPDATE ALI.TORDER_CHARGE SET CHR_RAT = :chargeAmount, FCT_TYP_BAS_Q = :chargeQuantity, REF_NBR_TYP_C = :referenceType , REF_NBR = :referenceNumber,
+	LST_UPD_S = CURRENT TIMESTAMP, LST_UPD_UID = :userId, LST_UPD_PGM_C = 'CFP', US_CHG_A = :chargeAmount
+	WHERE ORD_CHR_I = :externalChargeID and EXP_F = 'Y' and PAY_F = 'N' and REC_STT_F ='A';
+	]]>
+    </entry>
+
+    <entry key="approveCharges">
+        <![CDATA[
+	UPDATE ALI.TORDER_CHARGE
+	SET PAY_F = 'Y',CRR_REQ_PAY_D_PSAP = CURRENT DATE, REM_TO_IVC_REF_NBR = :invoiceNumber,IVC_RCV_D = :invoiceRecieveDate,	IVC_D = :invoiceDate, ATH_BY_UID = :userId,
+	LST_UPD_S = CURRENT TIMESTAMP, LST_UPD_PGM_C = 'CFP', LST_UPD_UID = :userId , CHR_VER_F = :ltlApproveFlag,
+	REF_NBR = CASE WHEN COALESCE (REF_NBR, '') = '' THEN :userId ELSE REF_NBR END
+	WHERE ORD_CHR_I = :externalChargeID and EXP_F = 'Y' and PAY_F = 'N' and REC_STT_F ='A';
+	]]>
+    </entry>
+
+    <entry key="insertAuditRecord">
+        <![CDATA[
+	INSERT INTO ALI.CRR_ORD_CHR_AUD (
+		ORD_I , RQM_CLS_C , DSP_NBR , JOB_I , RSV_I , DIV_C , PRJ_C , CRR_C , CRR_IVC_NBR , CRR_IVC_A ,
+	    CHG_RSN_C , CHR_A , ACN_TYP , CHR_REC_STT  , CRT_S , CRT_PGM_C , CRT_UID , CHG_RSN_CMM ,
+	    ATH_UID , CRR_IVC_D  , PS_VOU_ID , TDR_CHR_A)
+
+	    VALUES ( :orderId, :chargeCode, :dispatchNumber, :jobId , null, :divisionCode , :projectCode, :scacCode, :invoiceNumber , :vendorChargeAmount,
+	    :chargeReasonCode , :chargeAmount, 'UPDATE' , 'A', CURRENT TIMESTAMP, 'CFP' , :userId, :chargeReasonComment ,
+	    :directorOverrideId , :invoiceDate ,null,null);
+	]]>
+    </entry>
+
+    <entry key="validateCharges">
+        <![CDATA[
+	select chr_rat from ali.Torder_charge where ORD_CHR_I=:externalChargeID and EXP_F = 'Y' and PAY_F = 'N' and REC_STT_F ='A' and REM_TO_CUS_C =:scacCode and DSP_SEQ_NBR =:dispatchNumber and RQM_CLS_C=:chargeCode;
+	]]>
+    </entry>
+
+    <entry key="getExistingChargeCount">
+        <![CDATA[
+	SELECT COUNT(*) FROM ALI.TORDER_CHARGE WHERE ORD_CHR_I = :externalChargeID
+	and EXP_F = 'Y' and PAY_F = 'N' and REC_STT_F ='A' WITH UR;
+	]]>
+    </entry>
+
+    <entry key="GetExpNRowsForBillableCharges">
+        <![CDATA[
+	select ORD_CHR_I AS externalChargeId,
+	ORD_STP_SEQ_NBR AS stopNumber,
+	RQM_CLS_C AS chargeCode,
+	CHR_RAT AS totalChargeAmount
+	 from ali.Torder_charge where ord_i = :orderId and EXP_F  = 'N'
+and REC_STT_F = 'A' and rem_to_cus_c = '' and DSP_SEQ_NBR = 0 and RQM_CLS_C =:chargeCode;	]]>
+    </entry>
+
+    <entry key="totalamountvalidate">
+        <![CDATA[
+   select  sum(CHR_RAT) from ali.Torder_charge
+where ord_i = :orderId and EXP_F = 'Y' and REC_STT_F = 'A' and rem_to_cus_c = :scacCode and DSP_SEQ_NBR = :dispatchNumber and PAY_F = 'N';
+    ]]>
+    </entry>
+
+    <entry key="InActExpNRow">
+        <![CDATA[
+	UPDATE ALI.TORDER_CHARGE SET REC_STT_F='I',
+	LST_UPD_S = CURRENT TIMESTAMP, LST_UPD_PGM_C = 'CFP'
+	WHERE ORD_CHR_I = :externalChargeID and EXP_F = 'N'
+	]]>
+    </entry>
+
+    <entry key="getAutoApprDelayParameters">
+        <![CDATA[
+            select pa.CarrierPaymentWorkflowGroupTypeCode as carrierPaymentWorkflowGroupTypeCode,
+                   p.PrimaryParameterNumberValue as minNumberValue
+            from CFP.CarrierFreightPaymentParameter            p,
+            CFP.ParameterWorkflowSpecificationAssociation      pa,
+            CFP.ParameterSpecification                         ps,
+            CFP.ParameterSpecificationType                     pt
+            where ps.ParameterSpecificationID  = pa.ParameterSpecificationID
+            and pa.ParameterWorkflowSpecificationAssociationID = p.ParameterWorkflowSpecificationAssociationID
+            and ps.ParameterSpecificationTypeCode = pt.ParameterSpecificationTypeCode
+            and ps.ParameterSpecificationTypeCode in ('AAPRVDELAY')
+            and pa.CarrierPaymentWorkflowGroupTypeCode = :carrierPaymentWorkflowGroupTypeCode
+            and SYSDATETIMEOFFSET() between p.EffectiveTimestamp and p.ExpirationTimestamp
+            order by pa.CarrierPaymentWorkflowGroupTypeCode;
+            ]]>
+    </entry>
+
+</properties>

@@ -1,0 +1,60 @@
+<?xml version="1.0" encoding="UTF-8"?>
+<configuration debug="false" scan="false" scanPeriod="30 minutes">
+    <!--====================================================================-->
+    <!--                             Properties                             -->
+    <!--====================================================================-->
+    <!--=====================================================================================-->
+    <!-- It is important to note that xml files do not execute in the order they are written -->
+    <!-- And since we are not using the standard naming convention of logback-spring.xml we  -->
+    <!-- are forced into trying to trick the xml to behave. Therefore I am attempting a 2    -->
+    <!-- step KO. Namely, get the URL and then go collect the rest of the parameters.        -->
+    <!-- Otherwise what ends up happening 2/10x is that the config will execute before the   -->
+    <!-- property has been resolved resulting in bad jo-jo.                                  -->
+    <!-- Hopefully by only having these two, it might do a better job of comprehending what  -->
+    <!-- we want rather than what we are telling it to do...                                 -->
+    <!--=====================================================================================-->
+    <springProperty name="spring.cloud.config.uri" source="spring.cloud.config.uri" />
+    <include url="\${spring.cloud.config.uri}/static/logback-variables.xml" />
+    <!--======================================-->
+    <!-- Release resources upon shutting down -->
+    <!--======================================-->
+    <shutdownHook class="ch.qos.logback.core.hook.DelayingShutdownHook"/>
+    <!--======================================-->
+    <!-- This is the name that appears in JMX -->
+    <!--======================================-->
+    <contextName>\${spring.application.name}</contextName>
+    <!--========================================================-->
+    <!-- Reset previous level configurations of all JUL loggers -->
+    <!--========================================================-->
+    <contextListener class="ch.qos.logback.classic.jul.LevelChangePropagator">
+        <resetJUL>true</resetJUL>
+    </contextListener>
+    <!--==========================-->
+    <!-- To enable JMX Management -->
+    <!--==========================-->
+    <jmxConfigurator/>
+    <!--====================================================================-->
+    <!--                             Configuration                          -->
+    <!--====================================================================-->
+    <!--============================-->
+    <!-- Include any custom logback -->
+    <!--============================-->
+    <include optional="true" url="\${spring.cloud.config.uri}/static/\${spring.application.name}-logback.xml" />
+    <!--====================================================================-->
+    <!--                             Appenders                              -->
+    <!--====================================================================-->
+    <!--========================-->
+    <!-- Setup console appender -->
+    <!--========================-->
+    <appender name="STDOUT" class="ch.qos.logback.core.ConsoleAppender">
+        <encoder>
+            <pattern>[%date] [%level] [%thread{15}] [%logger{10}] [%mdc] : %msg%n</pattern>
+        </encoder>
+    </appender>
+    <!--====================================================================-->
+    <!--                             Root                                   -->
+    <!--====================================================================-->
+    <root level="${logging.appender.console.level:INFO}">
+        <appender-ref ref="STDOUT" />
+    </root>
+</configuration>

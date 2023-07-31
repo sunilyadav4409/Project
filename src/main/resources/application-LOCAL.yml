@@ -1,0 +1,103 @@
+#spring:
+#  activemq:
+#    broker-url: ${jbhunt.general.jms.activeMQ.connectionFactory.finance.producer.brokerURL}
+#    pool:
+#      enabled: true
+#    password: "Jb@7474"
+#    user: ${DOMAIN_PID}
+#  main:
+#    lazy-initialization: true
+#  jmx:
+#    enabled: false
+#  datasource:
+#    url: jdbc:db2://DEVPJES2.jbhunt.com:5025/JBHDB2D:clientProgramName=${spring.application.name:db2jcc_application};
+#    driver-class-name: com.ibm.db2.jcc.DB2Driver
+#    max-active: 20
+#    default-auto-commit : false
+#  datasource1:
+#    url: jdbc:sqlserver://Payment_DEV.nonprod.jbhunt.com:1433;DatabaseName=Payment_DEV;sendStringParametersAsUnicode=true;integratedSecurity=true;applicationName=${spring.application.name}
+##    url: jdbc:sqlserver://Payment_dev.nonprod.jbhunt.com:1433;DatabaseName=Payment_dev;sendStringParametersAsUnicode=true;integratedSecurity=true;authenticationScheme=JavaKerberos;integratedAuth=true;applicationName=${spring.application.name}
+#    driver-class-name: com.microsoft.sqlserver.jdbc.SQLServerDriver
+#    max-active: 20
+#  redis:
+#    host: localhost
+#    port: 6379
+#    password: ""
+#  cache:
+#    type: redis
+#  security:
+#    oauth2:
+#      client:
+#        provider:
+#          serviceAccount:
+#            token-uri: https://sso-dev.nonprod.jbhunt.com/auth/realms/security360/protocol/openid-connect/token
+#        registration:
+#          serviceAccount:
+#            client-id: ${CARRIERPAYMENT_CLIENTID}
+#            client-secret: ${CARRIERPAYMENT_CLIENTSECRET}
+#            authorization-grant-type: client_credentials
+#      resourceserver:
+#        jwt:
+#          issuer-uri: "https://sso-dev.nonprod.jbhunt.com/auth/realms/security360"
+#          jwk-set-uri: "https://sso-dev.nonprod.jbhunt.com/auth/realms/security360/protocol/openid-connect/certs"
+#
+#  jpa:
+#    hibernate:
+#      ddl-auto: none
+#      naming:
+#        physical-strategy: org.hibernate.boot.model.naming.PhysicalNamingStrategyStandardImpl
+#    database: SQL_SERVER
+#    show-sql: true
+#    properties:
+#      hibernate:
+#        dialect: org.hibernate.dialect.SQLServer2012Dialect
+#        id:
+#          new_generator_mappings: false
+#
+#  application:
+#    name: ws_finance_carrierpayment_autopay
+#cloud:
+#  config:
+#    uri: localhost
+#management:
+#  health:
+#    solr:
+#      enabled: false
+#    elasticsearch:
+#      enabled: false
+#    db:
+#      enabled: false
+#
+#pidName: Finance
+#pidDirectory: activedirectory
+#
+#jbhunt:
+#  cache:
+#    redis:
+#      initial-cache-configurations:
+#        getParametersForWorkFlowGroup:
+#          time-to-live: 86400s
+#
+#server:
+#  servlet:
+#    context-path: /carrierpaymentautopay
+#  port: 8085
+#
+#elasticSearchBaseUrl: finance-elastic-7-dev.nonprod.jbhunt.com
+#elasticPort: 9200
+#elasticDocType: _doc
+#elasticSearchWorkFlowIndex: finance-payment-carrierpayment-workflow
+#elastic.search.host.name: finance-elastic-7-dev.nonprod.jbhunt.com
+#elasticSearchVendorFormIndex: finance-payment-carrierpayment-vendorform
+#jestReadTimeout: 30000
+#jestDfltMaxTotalConnPerRoute: 50
+#jestMaxTotalConnection: 100
+#refreshParamElasticUpdate: true
+#timeoutParamElasticUpdate: 2m
+#
+#amqElasticTopicName: FINANCE.T.CARRIERPAYMENT.ELASTICUPDATE
+#amqMessage:
+#  topicName: FINANCE.T.CARRIERPAYMENTBRIDGE.INBOUND.MESSAGE.EVENTS
+#
+#supplierServiceUrl: http://suppliercreationservice-dev.nonprod.jbhunt.com/ws_fin_supplierCreation/services/supplierCreationService
+#

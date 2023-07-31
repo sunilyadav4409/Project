@@ -1,0 +1,49 @@
+spring:
+  h2.console.enabled: true
+  application:
+    name: ws_finance_carrierpayment
+  datasource:
+    #url: jdbc:h2:mem:CLM_H2;MODE=MSSQLServer;DB_CLOSE_DELAY=-1;DB_CLOSE_ON_EXIT=FALSE;INIT=CREATE SCHEMA IF NOT EXISTS CLM
+    url: jdbc:h2:mem:CFP_H2;MODE=MSSQLServer;DB_CLOSE_DELAY=-1;DB_CLOSE_ON_EXIT=FALSE;INIT=RUNSCRIPT FROM 'classpath:sql/init.sql';DATABASE_TO_UPPER=false;
+    driverClassName: org.h2.Driver
+    maximum-pool-size: 1
+    validation-query: SELECT 1
+  jpa:
+    database-platform: org.hibernate.dialect.H2Dialect
+    hibernate:
+        naming:
+           physical-strategy: org.hibernate.boot.model.naming.PhysicalNamingStrategyStandardImpl
+        ddl-auto: create-drop
+    show-sql: true
+  jmx:
+    default-domain: ${spring.application.name}
+    
+elasticsearch:
+  url: http://jbhdummy-tst.jbhunt.com:9200/carrierpaymentindex/parameters/
+  
+elasticSearchBaseUrl: http://elasticsearch-tst.jbhunt.com:9200/
+
+ldap:
+   userSearchBase: ou=active,ou=authentication,DC=test,DC=jbhunt,DC=com
+   groupSearchBase: ou=authentication,DC=test,DC=jbhunt,DC=com
+   groupSearchFilter: (member:=cn={0},ou=internal_users,ou=active,ou=authentication,dc=test,dc=jbhunt,dc=com)
+   url: ldap://testldap.jbhunt.com:389
+   userSearchFilter: (samAccountName={0})
+   domain: test.jbhunt.com
+
+ldapClient:
+ endpointUrl: http://directory-dev.jbhunt.com/ldap_v2/services/Users
+
+runtime: 
+ environment: test 
+ 
+intbaseurl: "http://localhost:8080/ws_finance_carrierpayment_integration/"
+quickpaycriterias: Quick Pay, Cash Advance, PCS1, PCS2, PCS3, PCS4, PCS5
+queuenames: ICS_LTL_MISSING_PAPERWORK,ICS_MISSING_PAPERWORK,ICS-LTL,ICS-AP,HISTORY,ICS,JBI-AP,DCS-AP
+lookupcriterias: Load Number, Dispatch Number
+vendoragencytype: State,Federal
+vendorminority: ASIAN AMERICAN,ASIAN INDIAN AMERICAN,ASIAN PACIFIC AMERICAN,BLACK AFRICAN AMERICAN,CANADIAN CAMSC,DISABILITY,ESKIMO ALEUTIAN ISLANDS,HISPANIC AMERICAN,LESBIAN GAY BISEXUAL TRANSGENDER,NATIVE AMERICAN,NATIVE HAWAIIAN,SERVICE DISABLED VETERAN,WOMAN BUSINESS ENTERPRISE
+vendorbusinesstype: CORPORATION,LLC,INDIVIDUAL/SOLE PROPRIETOR,OTHER
+vendoridentificationtype: Employer Identification Number,Social Security Number
+elastic.search.host.name: jbhsearchengine-tst.jbhunt.com
+ 
