@@ -14,6 +14,8 @@ import org.springframework.web.bind.annotation.*;
 
 @Slf4j
 @Controller
+@Controller
+@Controller
 @RestController
 @RequestMapping(CarrierPaymentConstants.AUTOPAY)
 @RequiredArgsConstructor
